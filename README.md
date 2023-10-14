@@ -1,6 +1,9 @@
 # SCP181
 
 
+如要借鉴代码请star 合作请followme
+
+
 A example Role  plugin of [EXILED](https://github.com/Exiled-Team/EXILED/) [SCPSL](scpslgame.com)
 
 
