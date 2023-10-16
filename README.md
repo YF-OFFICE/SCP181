@@ -1,6 +1,9 @@
 # SCP181
 
 
+[![Downloads](https://img.shields.io/github/downloads/YF-OFFICE/SCP181/total?color=brown&label=Downloads&style=for-the-badge)](https://github.com/YF-OFFICE/SCP181/releases)
+
+
 如要借鉴代码请star 合作请followme
 
 
