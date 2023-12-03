@@ -1,5 +1,7 @@
 ﻿using CommandSystem.Commands.RemoteAdmin.ServerEvent;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using Exiled.API.Interfaces;
 using Exiled.Events;
 using Exiled.Events.EventArgs.Player;
@@ -19,9 +21,9 @@ namespace TestingPlugin
     }
     public class Plugin:Plugin<Config>
     {
-        public override string Author => "Hi";
-        public override Version Version => new Version(1, 0, 0);
-        public override string Name => "Testing";
+        public override string Author => "YFOFFICE";
+        public override Version Version => new Version(1, 0, 1);
+        public override string Name => "ROLE-SCP181";
         public Plugin plugin;
         public string SCP181ID = "";
         public override void OnEnabled()
@@ -31,20 +33,17 @@ namespace TestingPlugin
             Exiled.Events.Handlers.Server.RoundStarted += this.RoundStarted;
             Exiled.Events.Handlers.Player.InteractingDoor += this.Indoor;
             Exiled.Events.Handlers.Player.Hurting += this.Hurt;
-            Exiled.Events.Handlers.Player
-                .Died+= this.Died;
-
+            Exiled.Events.Handlers.Player.Died+= this.Died;
             Log.Info("加载插件中");
             base.OnEnabled();
         }
         public void RoundStarted()
         {
-            foreach (var item in Player.Get(PlayerRoles.RoleTypeId.ClassD))
+            Timing.CallDelayed(2f, () =>
             {
-                SCP181ID = item.UserId;
-                
-            }
-              Timing.CallDelayed(3f, () => {
+                SCP181ID = Player.Get(PlayerRoles.RoleTypeId.ClassD).ToList().RandomItem().UserId;
+            });
+              Timing.CallDelayed(2f, () => {
                 var player = Player.Get(SCP181ID);
                 player.MaxHealth = 150;
                 player.Health = 150;
@@ -52,7 +51,7 @@ namespace TestingPlugin
                 player.CustomInfo = "SCP-181";
                 player.RankColor = "yellow";
                 player.ClearInventory();
-                player.AddItem(ItemType.KeycardFacilityManager);
+                player.AddItem(Item.List.ToList().FindAll(x =>x.Type.IsKeycard()).RandomItem());
                 player.AddItem(ItemType.SCP207);
                 player.AddItem(ItemType.Medkit);
                 player.ClearBroadcasts();
@@ -67,8 +66,7 @@ namespace TestingPlugin
                 int luck = new Random().Next(0, 100);
                 if (luck >= 50)
                 { 
-                  ev.IsAllowed = true;
-                ev.Door.IsOpen = true;
+                    ev.IsAllowed = true;
                     ev.Player.ShowHint("D:你很幸运打开了门");
                 }
             
