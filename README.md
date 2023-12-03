@@ -13,7 +13,7 @@
 A example Role  plugin of [EXILED](https://github.com/Exiled-Team/EXILED/) [SCPSL](scpslgame.com)
 
 
-[Bilibili视频](www.bilibili.com/video/BV128411675R)
+[Bilibili视频](http://www.bilibili.com/video/BV128411675R)
 
 
 持续更新如有bug请及时反馈
