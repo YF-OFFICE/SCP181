@@ -1,7 +1,13 @@
 # SCP181
 
 
-更新至EX8.4.3 更新内容请在下载里看
+功能:免伤 概率打开门 开局给物品(都可在Config内设置)
+
+如有更多想要尝试的功能可以在Iss里提出 尽量更新 h
+
+
+
+更新至EX8.8.0 更新内容请在下载里看
 
 
 [![Downloads](https://img.shields.io/github/downloads/YF-OFFICE/SCP181/total?color=brown&label=Downloads&style=for-the-badge)](https://github.com/YF-OFFICE/SCP181/releases)
