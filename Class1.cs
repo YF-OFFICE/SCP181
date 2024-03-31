@@ -27,10 +27,10 @@ namespace TestingPlugin
         [Description("多少人时会刷新")]
         public int People { get; set; } = 1;
         [Description("181开局默认给的物品")]
-        public List<ItemType> itemTypes { get; set; } = new List<ItemType>() { ItemType.KeycardJanitor,ItemType.Medkit,ItemType.Coin};
+        public List<ItemType> itemTypes { get; set; } = new List<ItemType>() { ItemType.KeycardJanitor, ItemType.Medkit, ItemType.Coin };
 
     }
-    public class Plugin:Plugin<Config>
+    public class Plugin : Plugin<Config>
     {
         public override string Author => "YF-OFFICE";
         public override Version Version => new Version(1, 0, 0);
@@ -40,31 +40,32 @@ namespace TestingPlugin
         public override void OnEnabled()
         {
             plugin = this;
-            Exiled.Events.Handlers.Server.RestartingRound+= this.RoundEnding;
+            Exiled.Events.Handlers.Server.RestartingRound += this.RoundEnding;
             Exiled.Events.Handlers.Server.RoundStarted += this.RoundStarted;
             Exiled.Events.Handlers.Player.InteractingDoor += this.Indoor;
             Exiled.Events.Handlers.Player.Hurting += this.Hurt;
             Exiled.Events.Handlers.Player
-                .Died+= this.Died;
+                .Died += this.Died;
 
             Log.Info("加载插件中");
             base.OnEnabled();
         }
         public override void OnDisabled()
-        {  
-           
+        {
+
             Exiled.Events.Handlers.Server.RestartingRound -= this.RoundEnding;
             Exiled.Events.Handlers.Server.RoundStarted -= this.RoundStarted;
             Exiled.Events.Handlers.Player.InteractingDoor -= this.Indoor;
             Exiled.Events.Handlers.Player.Hurting -= this.Hurt;
             Exiled.Events.Handlers.Player.Died -= this.Died;
-           plugin = null;
+            plugin = null;
             Log.Info("插件关闭了");
-           base.OnDisabled();
+            base.OnDisabled();
         }
         public static List<ItemType> itemTypes = new List<ItemType>();
         public void RoundStarted()
-        {    if (Player.List.Count() >= this.Config.People)
+        {
+            if (Player.List.Count() >= this.Config.People)
             {
                 Timing.CallDelayed(3f, () =>
                 {
@@ -94,13 +95,12 @@ namespace TestingPlugin
                     if (luck >= Config.Luck)
                     {
                         ev.IsAllowed = true;
-                        ev.Door.IsOpen = true;
                         ev.Player.ShowHint("D:你很幸运打开了门");
                     }
                 }
-            
+
             }
-        
+
         }
         public void Hurt(HurtingEventArgs ev)
         {
@@ -118,17 +118,31 @@ namespace TestingPlugin
                     }
                 }
             }
-        
+
         }
         public void Died(DiedEventArgs ev)
         {
             if (ev.Player.UserId == SCP181ID)
             {
-                Map.Broadcast(7,$"[设施消息]\nSCP181已被重新收容 \n 收容者:{ev.Attacker.Nickname}");
-                SCP181ID = "";
+                var player = ev.Player;
+                if (ev.Attacker == null)
+                {
+                    player.RankName = "";
+                    player.CustomInfo = "";
+                    player.RankColor = ""; 
+                    SCP181ID = ""; Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:Null"); }
+                else
+                {
+                    SCP181ID = "";
+                    player.RankName = "";
+                    player.CustomInfo = "";
+                    player.RankColor = "";
+                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:{ev.Attacker.Nickname}");
+                }
+               
             }
-        
-        
+
+
         }
         public void RoundEnding()
         {
