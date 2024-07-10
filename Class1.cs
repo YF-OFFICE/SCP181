@@ -89,7 +89,7 @@ namespace TestingPlugin
         {
             if (ev.Player.UserId == SCP181ID)
             {
-                if (ev.Door.IsKeycardDoor)
+                if (ev.Door.IsKeycardDoor&&!ev.Door.IsLocked)
                 {
                     int luck = new Random().Next(0, 100);
                     if (luck >= Config.Luck)
