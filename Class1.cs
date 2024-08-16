@@ -1,18 +1,14 @@
-﻿using CommandSystem.Commands.RemoteAdmin.ServerEvent;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Interfaces;
-using Exiled.Events;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace TestingPlugin
+namespace SCP181
 {
     public class Config : IConfig
     {
@@ -33,7 +29,7 @@ namespace TestingPlugin
     public class Plugin : Plugin<Config>
     {
         public override string Author => "YF-OFFICE";
-        public override Version Version => new Version(1, 0, 0);
+        public override Version Version => new Version(1, 2, 0);
         public override string Name => "SCP181";
         public Plugin plugin;
         public string SCP181ID = "";
@@ -44,10 +40,9 @@ namespace TestingPlugin
             Exiled.Events.Handlers.Server.RoundStarted += this.RoundStarted;
             Exiled.Events.Handlers.Player.InteractingDoor += this.Indoor;
             Exiled.Events.Handlers.Player.Hurting += this.Hurt;
-            Exiled.Events.Handlers.Player
-                .Died += this.Died;
+            Exiled.Events.Handlers.Player.Died += this.Died;
 
-            Log.Info("加载插件中");
+            Log.Info("加载插件完毕");
             base.OnEnabled();
         }
         public override void OnDisabled()
@@ -88,7 +83,7 @@ namespace TestingPlugin
         {
             if (ev.Player.UserId == SCP181ID)
             {
-                if (ev.Door.IsKeycardDoor&&!ev.Door.IsLocked)
+                if (ev.Door.IsKeycardDoor && !ev.Door.IsLocked)
                 {
                     int luck = new Random().Next(0, 100);
                     if (luck <= Config.Luck)
@@ -127,19 +122,18 @@ namespace TestingPlugin
                 if (ev.Attacker == null)
                 {
                     player.RankName = "";
-                    player.CustomInfo = "";
-                    player.RankColor = ""; 
-                    SCP181ID = "";
-                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:未知"); }
+                    player.RankColor = "";
+                    SCP181ID = ""; 
+                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:未知");
+                }
                 else
                 {
                     SCP181ID = "";
                     player.RankName = "";
-                    player.CustomInfo = "";
                     player.RankColor = "";
                     Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:{ev.Attacker.Nickname}");
                 }
-               
+
             }
 
 
