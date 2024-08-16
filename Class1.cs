@@ -19,9 +19,9 @@ namespace TestingPlugin
         public bool IsEnabled { get; set; } = true;
         public bool Debug { get; set; } = false;
         [Description("打开门幸运值")]
-        public int Luck { get; set; } = 50;
+        public int Luck { get; set; } = 10;
         [Description("躲避伤害幸运值")]
-        public int Luck1 { get; set; } = 30;
+        public int Luck1 { get; set; } = 10;
         [Description("最大血量")]
         public int Health { get; set; } = 150;
         [Description("多少人时会刷新")]
@@ -75,7 +75,6 @@ namespace TestingPlugin
                     player.MaxHealth = Config.Health;
                     player.Health = player.MaxHealth;
                     player.RankName = "SCP181";
-                    player.CustomInfo = "SCP-181";
                     player.RankColor = "yellow";
                     player.ClearInventory();
                     player.AddItem(Config.itemTypes);
@@ -92,7 +91,7 @@ namespace TestingPlugin
                 if (ev.Door.IsKeycardDoor&&!ev.Door.IsLocked)
                 {
                     int luck = new Random().Next(0, 100);
-                    if (luck >= Config.Luck)
+                    if (luck <= Config.Luck)
                     {
                         ev.IsAllowed = true;
                         ev.Player.ShowHint("D:你很幸运打开了门");
@@ -109,7 +108,7 @@ namespace TestingPlugin
                 if (ev.Attacker != null && ev.Player != null)
                 {
                     int luck = new Random().Next(0, 100);
-                    if (luck >= Config.Luck1)
+                    if (luck <= Config.Luck1)
                     {
                         ev.IsAllowed = false;
                         ev.Player.ShowHint("你幸运地躲避了一次伤害");
@@ -130,7 +129,8 @@ namespace TestingPlugin
                     player.RankName = "";
                     player.CustomInfo = "";
                     player.RankColor = ""; 
-                    SCP181ID = ""; Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:Null"); }
+                    SCP181ID = "";
+                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:未知"); }
                 else
                 {
                     SCP181ID = "";
@@ -147,7 +147,7 @@ namespace TestingPlugin
         public void RoundEnding()
         {
             SCP181ID = "";
-            Log.Info("181数据已重置");
+            Log.Debug("181数据已重置");
         }
 
     }
