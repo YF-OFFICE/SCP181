@@ -1,5 +1,6 @@
 # SCP181
 
+[LABAPI分支](https://github.com/YF-OFFICE/SCP181/tree/DEV-LabAPI)
 
 功能:免伤 概率打开门 开局给物品(都可在Config内设置)
 
