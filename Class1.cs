@@ -1,14 +1,17 @@
+using CommandSystem;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using LabApi.Features;
 using LabApi.Features.Console;
 using LabApi.Features.Wrappers;
+using LabApi.Loader;
 using LabApi.Loader.Features.Plugins;
 using MEC;
 using PlayerRoles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -33,14 +36,22 @@ namespace SCP181
         public override string Author => "YF-OFFICE";
         public override Version Version => new Version(1, 0, 0);
         public override string Description => "SCP181角色";
-
+        public static Config config;
         public override Version RequiredApiVersion => new Version(LabApiProperties.CompiledVersion);
+        public override string ConfigFileName { get; set; } = "SCP181.yml";
         public override string Name => "SCP181";
         public Plugin plugin;
-        public int SCP181ID = 0;
+        public static int SCP181ID = 0;
+
+        public override void LoadConfigs()
+        {
+            base.LoadConfigs();
+            config = this.LoadConfig<Config>(this.ConfigFileName);
+        }
         public override void Enable()
         {
             plugin = this;
+            config = this.Config;
             ServerEvents.RoundRestarted += this.RoundEnding;
             ServerEvents.RoundStarted += this.RoundStarted;
             PlayerEvents.InteractingDoor += this.Indoor;
@@ -149,5 +160,63 @@ namespace SCP181
             Logger.Debug("181数据已重置");
         }
 
+    }
+    [CommandHandler(typeof(RemoteAdminCommandHandler))]
+    public class SCP181Command : ICommand
+    {
+        public string Command => "set181";
+
+        public string[] Aliases => new string[] { "get181", "s181" };
+
+        public string Description => "更改或查询角色181 使用方法:s181 set {id} | s181 get";
+
+        public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
+        {
+            switch (arguments.At(0))
+            {
+                case "set":
+                    if (!int.TryParse(arguments.ElementAt(0), out int id))
+                    {
+                        response = "请输入正确的玩家id(游戏内的,不是steamid)";
+                        return false;
+                    }
+                    else
+                    {
+                        Player.Get(Plugin1.SCP181ID).Kill($"管理员killyou！");
+                       var  player = Player.Get(id);             
+                        Plugin1.SCP181ID = id;
+                        player.SetRole(RoleTypeId.ClassD);
+                        player.MaxHealth = Plugin1.config.Health;
+                        player.Health = player.MaxHealth;
+                        player.GroupName = "SCP181";
+                        player.GroupColor = "yellow";
+                        player.ClearInventory();
+                        if (!Plugin1.config.itemTypes.IsEmpty())
+                        {
+                            Plugin1.config.itemTypes.ForEach(x => player.AddItem(x));
+                        }
+                        player.ClearBroadcasts();
+                        player.SendBroadcast($"你是SCP181\n具有{Plugin1.config.Luck}%概率打开门 {Plugin1.config.Luck1}%免伤 背包里还有好东西", 5);
+                        response = "binggo！刷新成功";
+                        return true;
+                    }
+                case "get":
+                    var pl1 = Player.Get(Plugin1.SCP181ID);
+                    if (pl1 == null)
+                    {
+                        response = "目前没有SCP181玩家";
+                        return true;
+                    }
+                    else
+                    {
+                        response = $"目前SCP181玩家:\nID:{pl1.PlayerId}|角色:{pl1.Role}|Name:{pl1.Nickname}";
+                        return true;
+                    }
+                    //break;
+                default:
+                    response = "使用失败Error 使用方法:s181 set {id} | s181 get";
+                    return false;
+            } 
+        }
     }
 }
