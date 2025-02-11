@@ -1,19 +1,21 @@
-using Exiled.API.Extensions;
-using Exiled.API.Features;
-using Exiled.API.Interfaces;
-using Exiled.Events.EventArgs.Player;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
+using LabApi.Features;
+using LabApi.Features.Console;
+using LabApi.Features.Wrappers;
+using LabApi.Loader.Features.Plugins;
 using MEC;
+using PlayerRoles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
 
 namespace SCP181
 {
-    public class Config : IConfig
+    public class Config
     {
-        public bool IsEnabled { get; set; } = true;
-        public bool Debug { get; set; } = false;
         [Description("打开门幸运值")]
         public int Luck { get; set; } = 10;
         [Description("躲避伤害幸运值")]
@@ -26,36 +28,36 @@ namespace SCP181
         public List<ItemType> itemTypes { get; set; } = new List<ItemType>() { ItemType.KeycardJanitor, ItemType.Medkit, ItemType.Coin };
 
     }
-    public class Plugin : Plugin<Config>
+    public class Plugin1 : Plugin<Config>
     {
         public override string Author => "YF-OFFICE";
-        public override Version Version => new Version(1, 2, 0);
+        public override Version Version => new Version(1, 0, 0);
+        public override string Description => "SCP181角色";
+
+        public override Version RequiredApiVersion => new Version(LabApiProperties.CompiledVersion);
         public override string Name => "SCP181";
         public Plugin plugin;
-        public string SCP181ID = "";
-        public override void OnEnabled()
+        public int SCP181ID = 0;
+        public override void Enable()
         {
             plugin = this;
-            Exiled.Events.Handlers.Server.RestartingRound += this.RoundEnding;
-            Exiled.Events.Handlers.Server.RoundStarted += this.RoundStarted;
-            Exiled.Events.Handlers.Player.InteractingDoor += this.Indoor;
-            Exiled.Events.Handlers.Player.Hurting += this.Hurt;
-            Exiled.Events.Handlers.Player.Died += this.Died;
-
-            Log.Info("加载插件完毕");
-            base.OnEnabled();
+            ServerEvents.RoundRestarted += this.RoundEnding;
+            ServerEvents.RoundStarted += this.RoundStarted;
+            PlayerEvents.InteractingDoor += this.Indoor;
+            PlayerEvents.Hurting += this.Hurt;
+            PlayerEvents.Death += this.Died;
+            Logger.Info("加载插件完毕");
         }
-        public override void OnDisabled()
+        public override void Disable()
         {
 
-            Exiled.Events.Handlers.Server.RestartingRound -= this.RoundEnding;
-            Exiled.Events.Handlers.Server.RoundStarted -= this.RoundStarted;
-            Exiled.Events.Handlers.Player.InteractingDoor -= this.Indoor;
-            Exiled.Events.Handlers.Player.Hurting -= this.Hurt;
-            Exiled.Events.Handlers.Player.Died -= this.Died;
+            ServerEvents.RoundRestarted -= this.RoundEnding;
+            ServerEvents.RoundStarted -= this.RoundStarted;
+            PlayerEvents.InteractingDoor -= this.Indoor;
+            PlayerEvents.Hurting -= this.Hurt;
+            PlayerEvents.Death -= this.Died;
             plugin = null;
-            Log.Info("插件关闭了");
-            base.OnDisabled();
+            Logger.Info("插件关闭了");
         }
         public static List<ItemType> itemTypes = new List<ItemType>();
         public void RoundStarted()
@@ -65,73 +67,76 @@ namespace SCP181
                 Timing.CallDelayed(3f, () =>
                 {
 
-                    SCP181ID = Player.Get(PlayerRoles.RoleTypeId.ClassD).GetRandomValue().UserId;
+                    SCP181ID = Player.List.Where(x => x.Role == RoleTypeId.ClassD).ToList().RandomItem().PlayerId;
                     var player = Player.Get(SCP181ID);
                     player.MaxHealth = Config.Health;
                     player.Health = player.MaxHealth;
-                    player.RankName = "SCP181";
-                    player.RankColor = "yellow";
+                    player.GroupName = "SCP181";
+                    player.GroupColor = "yellow";
                     player.ClearInventory();
-                    player.AddItem(Config.itemTypes);
+                    if (!Config.itemTypes.IsEmpty())
+                    {   Config.itemTypes.ForEach(x=>player.AddItem(x));
+                    }
                     player.ClearBroadcasts();
-                    player.Broadcast(5, $"你是SCP181\n具有{Config.Luck}%概率打开门 {Config.Luck1}%免伤 背包里还有好东西");
+                    player.SendBroadcast($"你是SCP181\n具有{Config.Luck}%概率打开门 {Config.Luck1}%免伤 背包里还有好东西",5);
 
                 });
             }
         }
-        public void Indoor(InteractingDoorEventArgs ev)
+        public void Indoor(PlayerInteractingDoorEventArgs ev)
         {
-            if (ev.Player.UserId == SCP181ID)
+            if (ev.Player.PlayerId== SCP181ID)
             {
-                if (ev.Door.IsKeycardDoor && !ev.Door.IsLocked)
+                
+                if (ev.CanOpen == false && !ev.Door.IsLocked)
                 {
                     int luck = new Random().Next(0, 100);
                     if (luck <= Config.Luck)
                     {
-                        ev.IsAllowed = true;
-                        ev.Player.ShowHint("D:你很幸运打开了门");
+                        ev.CanOpen = true;
+                        ev.Player.SendHint("D:你很幸运打开了门",2);
                     }
                 }
 
             }
 
         }
-        public void Hurt(HurtingEventArgs ev)
+        public void Hurt(PlayerHurtingEventArgs ev)
         {
-            if (ev.Player.UserId == SCP181ID)
+            if (ev.Player.PlayerId == SCP181ID)
             {
-                if (ev.Attacker != null && ev.Player != null)
+                if (ev.Player != null && ev.Target != null)
                 {
                     int luck = new Random().Next(0, 100);
                     if (luck <= Config.Luck1)
                     {
                         ev.IsAllowed = false;
-                        ev.Player.ShowHint("你幸运地躲避了一次伤害");
-                        ev.Attacker.ShowHint("你很倒霉 没有伤到181");
+                        ev.Target.SendHint("你幸运地躲避了一次伤害");
+                        ev.Player.SendHint("你很倒霉 没有伤到181");
 
                     }
                 }
             }
 
         }
-        public void Died(DiedEventArgs ev)
+        public void Died(PlayerDeathEventArgs ev)
         {
-            if (ev.Player.UserId == SCP181ID)
+            if (ev.Player.PlayerId == SCP181ID)
             {
                 var player = ev.Player;
                 if (ev.Attacker == null)
                 {
-                    player.RankName = "";
-                    player.RankColor = "";
-                    SCP181ID = ""; 
-                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:未知");
+                    player.GroupName = "";
+                    player.GroupColor = "";
+                    SCP181ID = 0; 
+                    Player.List.ToList().ForEach(x=>x.SendBroadcast($"[设施消息]\nSCP181已被重新收容 \n 收容者:未知",6));
                 }
                 else
                 {
-                    SCP181ID = "";
-                    player.RankName = "";
-                    player.RankColor = "";
-                    Map.Broadcast(7, $"[设施消息]\nSCP181已被重新收容 \n 收容者:{ev.Attacker.Nickname}");
+                    SCP181ID = 0;
+                    player.GroupName = "";
+                    player.GroupColor = "";
+                    Player.List.ToList().ForEach(x => x.SendBroadcast($"[设施消息]\nSCP181已被重新收容 \n 收容者:{ev.Attacker.Nickname}",6));
                 }
 
             }
@@ -140,8 +145,8 @@ namespace SCP181
         }
         public void RoundEnding()
         {
-            SCP181ID = "";
-            Log.Debug("181数据已重置");
+            SCP181ID = 0;
+            Logger.Debug("181数据已重置");
         }
 
     }
