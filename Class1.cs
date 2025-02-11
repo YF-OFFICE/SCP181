@@ -31,14 +31,13 @@ namespace SCP181
         public List<ItemType> itemTypes { get; set; } = new List<ItemType>() { ItemType.KeycardJanitor, ItemType.Medkit, ItemType.Coin };
 
     }
-    public class Plugin1 : Plugin<Config>
+    public class Plugin1 : Plugin
     {
         public override string Author => "YF-OFFICE";
         public override Version Version => new Version(1, 0, 0);
         public override string Description => "SCP181角色";
         public static Config config;
         public override Version RequiredApiVersion => new Version(LabApiProperties.CompiledVersion);
-        public override string ConfigFileName { get; set; } = "SCP181.yml";
         public override string Name => "SCP181";
         public Plugin plugin;
         public static int SCP181ID = 0;
@@ -46,12 +45,11 @@ namespace SCP181
         public override void LoadConfigs()
         {
             base.LoadConfigs();
-            config = this.LoadConfig<Config>(this.ConfigFileName);
+            config = this.LoadConfig<Config>("SCP181.yml");
         }
         public override void Enable()
         {
             plugin = this;
-            config = this.Config;
             ServerEvents.RoundRestarted += this.RoundEnding;
             ServerEvents.RoundStarted += this.RoundStarted;
             PlayerEvents.InteractingDoor += this.Indoor;
@@ -73,23 +71,23 @@ namespace SCP181
         public static List<ItemType> itemTypes = new List<ItemType>();
         public void RoundStarted()
         {
-            if (Player.List.Count() >= this.Config.People)
+            if (Player.List.Count() >= config.People)
             {
                 Timing.CallDelayed(3f, () =>
                 {
 
                     SCP181ID = Player.List.Where(x => x.Role == RoleTypeId.ClassD).ToList().RandomItem().PlayerId;
                     var player = Player.Get(SCP181ID);
-                    player.MaxHealth = Config.Health;
+                    player.MaxHealth = config.Health;
                     player.Health = player.MaxHealth;
                     player.GroupName = "SCP181";
                     player.GroupColor = "yellow";
                     player.ClearInventory();
-                    if (!Config.itemTypes.IsEmpty())
-                    {   Config.itemTypes.ForEach(x=>player.AddItem(x));
+                    if (!config.itemTypes.IsEmpty())
+                    {   config.itemTypes.ForEach(x=>player.AddItem(x));
                     }
                     player.ClearBroadcasts();
-                    player.SendBroadcast($"你是SCP181\n具有{Config.Luck}%概率打开门 {Config.Luck1}%免伤 背包里还有好东西",5);
+                    player.SendBroadcast($"你是SCP181\n具有{config.Luck}%概率打开门 {config.Luck1}%免伤 背包里还有好东西",5);
 
                 });
             }
@@ -102,7 +100,7 @@ namespace SCP181
                 if (ev.CanOpen == false && !ev.Door.IsLocked)
                 {
                     int luck = new Random().Next(0, 100);
-                    if (luck <= Config.Luck)
+                    if (luck <= config.Luck)
                     {
                         ev.CanOpen = true;
                         ev.Player.SendHint("D:你很幸运打开了门",2);
@@ -119,7 +117,7 @@ namespace SCP181
                 if (ev.Player != null && ev.Target != null)
                 {
                     int luck = new Random().Next(0, 100);
-                    if (luck <= Config.Luck1)
+                    if (luck <= config.Luck1)
                     {
                         ev.IsAllowed = false;
                         ev.Target.SendHint("你幸运地躲避了一次伤害");
